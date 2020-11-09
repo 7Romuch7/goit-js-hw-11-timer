@@ -1,50 +1,53 @@
-const refs = {
-    daysTime: document.querySelector('.value[data-value="days"]'),
-    hoursTime: document.querySelector('.value[data-value="hours"]'),
-    minsTime: document.querySelector('.value[data-value="mins"]'),
-    secsTime: document.querySelector('.value[data-value="secs"]'),
-    timerId: document.querySelector('#timer-1'),
-}
+export default class CountdownTimer {
 
-class CountdownTimer {
     constructor({ selector, targetDate }) {
+        this.days = document.querySelector(`${selector} [data-value="days"]`);
+        this.hours = document.querySelector(`${selector} [data-value="hours"]`);
+        this.minutes = document.querySelector(`${selector} [data-value="mins"]`);
+        this.seconds = document.querySelector(`${selector} [data-value="secs"]`);
         this.selector = selector;
         this.targetDate = targetDate;
+        this.timerId = null;
+        this.startTimer();
+       
     }
 
-    setInt = setInterval(() => {
-    const nowDate = Date.now();
-    const time = this.targetDate - nowDate;
-    this.updateClockface(time);
-this.timeFinish(time);
-  }, 1000);
+    startTimer() {
+        this.getTime();
+        this.timerId = setInterval(() => {
+            this.getTime();
+        }, 1000);
+        
+    };
 
-  updateClockface(time) {
-    const days = this.pad(Math.floor(time / (1000 * 60 * 60 * 24)));
-    const hours = this.pad(
-      Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    );
-    const mins = this.pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
-    const secs = this.pad(Math.floor((time % (1000 * 60)) / 1000));
-    refs.daysTime.textContent = `${days}`;
-    refs.hoursTime.textContent = `${hours}`;
-    refs.minsTime.textContent = `${mins}`;
-    refs.secsTime.textContent = `${secs}`;
-  }
-   
-    pad(value) {
-        return String(value).padStart(2, "0");
+    getTime() {
+        const time = new Date(this.targetDate) - Date.now();
+        const leftTime = this.timerComponents(time);
+        this.timerInterface(leftTime);
     }
-  
-    timeFinish(time) {
-        if (time < 0) {
-            clearInterval(this.setInt);
-            refs.timerId.textContent = "Finish";
+
+    timerComponents(date) {
+        const days = Math.floor(date / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((date % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((date % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((date % (1000 * 60)) / 1000);
+
+        if (days < 0 || hours < 0 || mins < 0 || secs < 0) {
+            clearInterval(this.timerId);
+            return {days: "00", hours: "00", mins: "00", secs: "00"}
         }
+        
+        if (days === 0 && hours === 0 && mins === 0 && secs === 0) {
+            clearInterval(this.timerId);
+        }
+        
+        return { days, hours, mins, secs };
+    }
+
+    timerInterface(timeData) {
+        this.days.textContent = String(timeData.days).padStart(2, '0');
+        this.hours.textContent = String(timeData.hours).padStart(2, '0');
+        this.minutes.textContent = String(timeData.mins).padStart(2, '0');
+        this.seconds.textContent = String(timeData.secs).padStart(2, '0');
     }
 }
-
-new CountdownTimer({
-  selector: "#timer-1",
-  targetDate: new Date('November 15, 2020'),
-});
